@@ -23,6 +23,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="1,2"
 SOURCE_PATH = "/srv/workspace/research/user_based_contexts_tagging/"
 SPECTROGRAMS_PATH = "/srv/workspace/research/user_based_contexts_tagging/dataset/"
 OUTPUT_PATH = "/srv/workspace/research/user_based_contexts_tagging/experiments_results/"
+EXTRA_OUTPUTS = "/srv/workspace/research/extra_experiment_results"
 
 EXPERIMENTNAME = "user_embeddings_active"
 INPUT_SHAPE = (646, 96, 1)
@@ -673,6 +674,7 @@ def main():
     # Setting up saving directory
     experiment_name = strftime("%Y-%m-%d_%H-%M-%S", localtime())
     exp_dir = os.path.join(OUTPUT_PATH, EXPERIMENTNAME, experiment_name)
+    extra_exp_dir =  os.path.join(EXTRA_OUTPUTS, EXPERIMENTNAME, experiment_name)
 
     # Add ops to save and restore all the variables.
     saver = tf.train.Saver()
@@ -681,9 +683,9 @@ def main():
     my_loss_history, my_loss_val_history = [], []
     with tf.Session() as sess:
         # Write summaries to LOG_DIR -- used by TensorBoard
-        train_writer = tf.summary.FileWriter(exp_dir + '/tensorboard/train', graph=tf.get_default_graph())
-        test_writer = tf.summary.FileWriter(exp_dir + '/tensorboard/test', graph=tf.get_default_graph())
-        print("Execute the following in a terminal:\n" + "tensorboard --logdir=" + exp_dir)
+        train_writer = tf.summary.FileWriter(extra_exp_dir + '/tensorboard/train', graph=tf.get_default_graph())
+        test_writer = tf.summary.FileWriter(extra_exp_dir + '/tensorboard/test', graph=tf.get_default_graph())
+        print("Execute the following in a terminal:\n" + "tensorboard --logdir=" + extra_exp_dir)
         sess.run(tf.global_variables_initializer())
         for epoch in range(NUM_EPOCHS):
             batch_loss, batch_accuracy = np.zeros([TRAINING_STEPS, 1]), np.zeros([TRAINING_STEPS, 1])
@@ -736,7 +738,7 @@ def main():
                 last_improvement = epoch
 
                 # Save all variables of the TensorFlow graph to file.
-                save_path = saver.save(sess, os.path.join(exp_dir, "best_validation.ckpt"))
+                save_path = saver.save(sess, os.path.join(extra_exp_dir, "best_validation.ckpt"))
                 # print("Model with best validation saved in path: %s" % save_path)
 
             # If no improvement found in the required number of iterations.
@@ -745,11 +747,11 @@ def main():
                 # Break out from the for-loop.
                 break
 
-        save_path = saver.save(sess, os.path.join(exp_dir, "last_epoch.ckpt"))
+        save_path = saver.save(sess, os.path.join(extra_exp_dir, "last_epoch.ckpt"))
         print("Last iteration model saved in path: %s" % save_path)
 
         # Loading model with best validation
-        saver.restore(sess, os.path.join(exp_dir, "best_validation.ckpt"))
+        saver.restore(sess, os.path.join(extra_exp_dir, "best_validation.ckpt"))
         print("Model with best validation restored before testing.")
 
         test_labels = pd.read_csv(os.path.join(SOURCE_PATH, "GroundTruth/test_active_clipped.csv"))
