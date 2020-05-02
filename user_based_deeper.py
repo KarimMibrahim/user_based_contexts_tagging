@@ -25,14 +25,14 @@ SPECTROGRAMS_PATH = "/srv/workspace/research/user_based_contexts_tagging/dataset
 OUTPUT_PATH = "/srv/workspace/research/user_based_contexts_tagging/experiments_results/"
 EXTRA_OUTPUTS = "/srv/workspace/research/extra_experiment_results"
 
-EXPERIMENTNAME = "user_embeddings_random"
+EXPERIMENTNAME = "user_embeddings_deeper"
 INPUT_SHAPE = (646, 96, 1)
 EMBEDDINGS_DIM = 256
 #TODO: fix labels
 LABELS_LIST = ['car', 'gym', 'happy', 'night', 'relax',
        'running', 'sad', 'summer', 'work', 'workout']
 
-global_user_embeddings = pd.read_pickle("/srv/workspace/research/user_based_contexts_tagging/GroundTruth/user_embeddings_random.pkl")
+global_user_embeddings = pd.read_pickle("/srv/workspace/research/user_based_contexts_tagging/GroundTruth/user_embeddings.pkl")
 global_labels = pd.read_csv("/srv/workspace/research/user_based_contexts_tagging/GroundTruth/all_labels_clipped.csv")
 train_partial = pd.read_csv("/srv/workspace/research/user_based_contexts_tagging/GroundTruth/train_active_clipped.csv")
 POS_WEIGHTS = len(train_partial)/train_partial.sum()[2:]
@@ -223,7 +223,7 @@ def get_dataset(input_csv, input_shape=INPUT_SHAPE, batch_size=32, shuffle=True,
 
     # Select only features and annotation
     dataset = dataset.map(lambda sample: (
-    sample["features"], sample["binary_label"], sample["user_embeddings"]))
+    sample["features"], sample["binary_label"], sample["user_embeddings"],sample["song_id"],sample["user_id"]))
 
     return dataset
 
@@ -341,7 +341,7 @@ def get_model(x_input,user_embeddings, current_keep_prob, train_phase):
         flattened = tf.reshape(max6, [-1, 11 * 2 * 256])
         fully1 = tf.nn.sigmoid(full_layer(flattened, 256))
     """
-    """
+    
     with tf.name_scope('embedding_layer_1'):
         embeddings_1 = full_layer(user_embeddings, 128)
 
@@ -350,10 +350,10 @@ def get_model(x_input,user_embeddings, current_keep_prob, train_phase):
         spect_1 = tf.nn.sigmoid(full_layer(flattened, 512))
         spect_2 = tf.nn.sigmoid(full_layer(spect_1, 256))
         spect_3 = tf.nn.sigmoid(full_layer(spect_2, 128))
-    """
+
     with tf.name_scope('Fully_connected_1'):
-        flattened = tf.reshape(max4, [-1, 41 * 6 * 256])
-        concatenated = tf.concat([flattened,user_embeddings],1)
+        #flattened = tf.reshape(max4, [-1, 41 * 6 * 256])
+        concatenated = tf.concat([spect_3,embeddings_1],1)
         fully1 = tf.nn.sigmoid(full_layer(concatenated, 128))
 
     with tf.name_scope('Fully_connected_2'):
@@ -776,6 +776,9 @@ def main():
         test_iterator = test_dataset.make_one_shot_iterator()
         test_next_element = test_iterator.get_next()
 
+        test_song_ids = np.zeros([test_classes.shape[0],1])
+        test_user_ids = np.zeros([test_classes.shape[0],1])
+
         for test_batch_counter in range(TEST_NUM_STEPS):
             start_idx = (test_batch_counter * BATCH_SIZE)
             end_idx = (test_batch_counter * BATCH_SIZE) + BATCH_SIZE
@@ -783,7 +786,10 @@ def main():
             test_batch_images = test_batch[0]
             test_batch_labels = np.squeeze(test_batch[1])
             test_embeddings = np.squeeze(test_batch[2])
+            test_song_ids[start_idx:end_idx] = test_batch[3].reshape([-1, 1])
+            test_user_ids[start_idx:end_idx] = test_batch[4].reshape([-1, 1])
             test_classes[start_idx:end_idx, :] = test_batch_labels
+
             test_pred_prob[start_idx:end_idx, :] = sess.run(model_output,
                                                             feed_dict={x_input: test_batch_images,
                                                                        embeddings_input: test_embeddings,
@@ -793,6 +799,7 @@ def main():
         accuracy_out, auc_roc, hamming_error = evaluate_model(test_pred_prob, test_classes,
                                                               saving_path=exp_dir,
                                                               evaluation_file_path= \
+
                                                                   os.path.join(exp_dir, "evaluation_results.txt"))
         results = create_analysis_report(test_pred_prob, test_classes, exp_dir, LABELS_LIST)
         """
