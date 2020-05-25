@@ -629,6 +629,7 @@ def main():
     exp_dir = os.path.join(OUTPUT_PATH, EXPERIMENTNAME, experiment_name)
     extra_exp_dir =  os.path.join(EXTRA_OUTPUTS, EXPERIMENTNAME, experiment_name)
     os.makedirs(exp_dir, exist_ok=True)
+    os.makedirs(extra_exp_dir, exist_ok=True)
 
     # Add ops to save and restore all the variables.
     saver = tf.train.Saver()
