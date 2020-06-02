@@ -26,7 +26,7 @@ SPECTROGRAMS_PATH = "/srv/workspace/research/user_based_contexts_tagging/dataset
 OUTPUT_PATH = "/srv/workspace/research/user_based_contexts_tagging/experiments_results/"
 EXTRA_OUTPUTS = "/srv/workspace/research/extra_experiment_results"
 
-EXPERIMENTNAME = "single_label_deeper_weighted_normalized_long"
+EXPERIMENTNAME = "single_label_audio_layers"
 INPUT_SHAPE = (646, 96, 1)
 EMBEDDINGS_DIM = 256
 #TODO: fix labels
@@ -346,18 +346,18 @@ def get_model(x_input,user_embeddings, current_keep_prob, train_phase):
         fully1 = tf.nn.sigmoid(full_layer(flattened, 256))
     """
     with tf.name_scope('embedding_layer_1'):
-        embeddings_1 = full_layer(embeds_norm, 128)
+        embeddings_1 = tf.nn.relu(full_layer(embeds_norm, 128))
         embeds_1_norm = tf.layers.batch_normalization(embeddings_1, training=train_phase)
-    """
+
     with tf.name_scope('flattened_layer_1'):
         flattened = tf.reshape(max4, [-1, 41 * 6 * 256])
-        spect_1 = tf.nn.sigmoid(full_layer(flattened, 2048))
-        spect_2 = tf.nn.sigmoid(full_layer(spect_1, 256))
-        spect_3 = tf.nn.sigmoid(full_layer(spect_2, 128))
-    """
+        spect_1 = tf.nn.relu(full_layer(flattened, 2048))
+        spect_2 = tf.nn.relu(full_layer(spect_1, 256))
+        spect_3 = tf.nn.relu(full_layer(spect_2, 128))
+
     with tf.name_scope('Fully_connected_1'):
-        flattened = tf.reshape(max4, [-1, 41 * 6 * 256])
-        flattened_norm = tf.layers.batch_normalization(flattened, training=train_phase)
+        #flattened = tf.reshape(max4, [-1, 41 * 6 * 256])
+        flattened_norm = tf.layers.batch_normalization(spect_3, training=train_phase)
         concatenated = tf.concat([flattened_norm,embeds_1_norm],1)
         fully1 = tf.nn.sigmoid(full_layer(concatenated, 128))
 
