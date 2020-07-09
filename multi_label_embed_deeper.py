@@ -709,8 +709,8 @@ def main():
         saver.restore(sess, os.path.join(extra_exp_dir, "best_validation.ckpt"))
         print("Model with best validation restored before testing.")
 
-        test_labels = pd.read_csv(os.path.join(SOURCE_PATH, "GroundTruth/test_single.csv"))
-        test_dataset = get_dataset(os.path.join(SOURCE_PATH, "GroundTruth/test_single.csv"))
+        test_labels = pd.read_csv(os.path.join(SOURCE_PATH, "GroundTruth/test_active_clipped.csv"))
+        test_dataset = get_dataset(os.path.join(SOURCE_PATH, "GroundTruth/test_active_clipped.csv"))
         test_classes = np.zeros_like(test_labels.iloc[:, 2:].values, dtype=float)
         # test_images, test_classes = load_test_set_raw(test_split)
 
