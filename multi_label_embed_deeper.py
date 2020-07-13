@@ -729,13 +729,13 @@ def main():
             test_embeddings = np.squeeze(test_batch[2])
             test_classes[start_idx:end_idx, :] = test_batch_labels
 
-            test_pred_prob[start_idx:end_idx, :] = sess.run([model_output],
+            test_pred_temp = sess.run([model_output],
                                                             feed_dict={x_input: test_batch_images,
                                                                        embeddings_input: test_embeddings,
                                                                        current_keep_prob: 1.0,
                                                                        train_phase: False})
 
-
+            test_pred_prob[start_idx:end_idx, :] = test_pred_temp[0]
         accuracy_out, auc_roc = evaluate_model(test_pred_prob, test_classes,
                                                               saving_path=exp_dir,
                                                               evaluation_file_path= \
