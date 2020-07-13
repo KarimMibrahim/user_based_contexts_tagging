@@ -738,8 +738,7 @@ def main():
             test_pred_prob[start_idx:end_idx, :] = test_pred_temp[0]
         accuracy_out, auc_roc = evaluate_model(test_pred_prob, test_classes,
                                                               saving_path=exp_dir,
-                                                              evaluation_file_path= \
-                                                                  os.path.join(exp_dir, "evaluation_results.txt"))
+                                                              evaluation_file_path= os.path.join(exp_dir, "evaluation_results.txt"))
         results = create_analysis_report(test_pred_prob, test_classes, exp_dir, LABELS_LIST)
     # Plot and save losses
     plot_loss_acuracy(epoch_losses_history, epoch_accurcies_history, val_losses_history, val_accuracies_history,
